@@ -17,7 +17,6 @@ public class EmpleadoManager {
         queue = new Queue<>(getEmployees().tamaño() + 1);
     }
 
-    // Método para guardar empleados en un archivo de texto
     public void saveEmployees() throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("employees.txt"))) {
             for (int i = 0; i < employees.tamaño(); i++) {
@@ -36,7 +35,7 @@ public class EmpleadoManager {
         }
     }
 
-    // Método para cargar empleados desde un archivo de texto
+
     public void loadEmployees() throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader("employees.txt"))) {
             String line;
@@ -62,7 +61,7 @@ public class EmpleadoManager {
 
 
 
-    // Método para agregar un empleado
+
     public void addEmployee(Empleado employee) throws IOException {
         if (!employeeExist(employee.getId())) {
             employees.agregar(employee);
@@ -73,7 +72,7 @@ public class EmpleadoManager {
         }
     }
 
-    // Método para eliminar un empleado por ID
+
     public void removeEmployee(int id) {
         Empleado employee = employees.buscar(id);
         if (employee != null) {
@@ -81,7 +80,7 @@ public class EmpleadoManager {
         }
     }
 
-    // Método para actualizar un empleado por ID
+
     public void updateEmployee(int id, String name, String lastName, LocalDate birthDate, Status status, double monthlyRate, int daysWorkedInMonth) {
         Empleado employee = employees.buscar(id);
         if (employee != null) {
@@ -110,12 +109,10 @@ public class EmpleadoManager {
         }
     }
 
-    // Método para obtener un empleado por índice
     public Empleado getEmployee(int index) {
         return employees.buscarPorIndice(index);
     }
 
-    // Método para verificar si un empleado ya existe por ID
     private boolean employeeExist(int id) {
         for (int i = 0; i < employees.tamaño(); i++) {
             Empleado empleado = employees.buscarPorIndice(i);
@@ -126,20 +123,15 @@ public class EmpleadoManager {
         return false;
     }
 
-    // Método para obtener el ArrayList de empleados
     public ArrayList<Empleado> getEmployees() {
         return employees;
     }
 
-
-    // punto 7 metodo
     public Queue<Empleado> employeeQueue() {
         for (int i = 0; i < employees.tamaño(); i++) {
             Empleado empleado = employees.buscarPorIndice(i);
             if (empleado != null) {
                 queue.offer(empleado);
-            } else {
-                System.out.println("ocurrio un error");
             }
         }
         return queue;
@@ -147,6 +139,29 @@ public class EmpleadoManager {
 
     public Queue<Empleado> getQueue() {
         return queue;
+    }
+
+    public double recursiveMethod(int index) {
+        if (index >= employees.tamaño()) {
+            return 0;
+        }
+        Empleado empleado = employees.buscarPorIndice(index);
+        if (empleado.getStatus() == Status.ACTIVO || empleado.getStatus() == Status.VACACIONES) {
+            return empleado.salary() + recursiveMethod(index + 1);
+        } else {
+            return recursiveMethod(index + 1);
+        }
+    }
+
+    public ArrayList<Empleado> getEmployeesByStatus(Status status) {
+        ArrayList<Empleado> result = new ArrayList<>();
+        for (int i = 0; i < employees.tamaño(); i++) {
+            Empleado empleado = employees.buscarPorIndice(i);
+            if (empleado.getStatus() == status) {
+                result.agregar(empleado);
+            }
+        }
+        return result;
     }
 
 

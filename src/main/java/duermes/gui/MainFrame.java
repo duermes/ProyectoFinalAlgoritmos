@@ -6,6 +6,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -139,15 +140,16 @@ public class MainFrame extends JFrame {
         titleLabel2.setForeground(new Color(191, 111, 31));
         titleLabel2.setBounds(384, 20, 168, 50);
         titleLabel2.setHorizontalAlignment(SwingConstants.CENTER);
-        JLabel importeLabel = new JLabel("IMPORTE TOTAL");
-        importeLabel.setBounds(16, 86, 113, 35);
+        JLabel importeLabel = new JLabel("<html>IMPORTE TOTAL<br>ACTIVO&VACAC.</html>");
+        importeLabel.setBounds(16, 86, 113, 50);
         importeLabel.setHorizontalAlignment(SwingConstants.LEFT);
         importeTotalTxt = new JTextArea();
+        importeTotalTxt.setText("S/ " + manager.recursiveMethod(0));
         importeTotalTxt.setBounds(141, 86, 200, 35);
         importeTotalTxt.setEditable(false);
         importeTotalTxt.setFocusable(false);
+        importeTotalTxt.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
         importeTotalTxt.setBorder(BorderFactory.createEmptyBorder());
-        importeTotalTxt.setFont(actorFont.deriveFont(11f));
 
         String[] orderOptions1 = {"BUSCAR POR", "ACTIVO", "VACACIONES", "DESCANSO MEDICO"};
         searchBy = new JComboBox<>(orderOptions1);
@@ -418,7 +420,6 @@ public class MainFrame extends JFrame {
         });
 
         addBtn1.addActionListener(e -> {
-            // obtener la info de los txtfield
             String name = nameTxt.getText();
             String lastName = lastNameTxt.getText();
             try {
@@ -443,6 +444,7 @@ public class MainFrame extends JFrame {
                 birthDateTxt.setText("");
                 monthlyRateTxt.setText("");
                 workedDaysTxt.setText("");
+                importeTotalTxt.setText("S/ " + manager.recursiveMethod(0));
             } catch (DateTimeParseException dtpe) {
                 System.err.println("Formato de fecha inválido: " + dtpe.getMessage());
             } catch (Exception exception) {
@@ -481,6 +483,8 @@ public class MainFrame extends JFrame {
                     billingPaymentTable.getModel().setValueAt(lastName, selectedRow, 1);
                     billingPaymentTable.getModel().setValueAt(manager.getEmployees().buscarPorIndice(selectedRow).salary(), selectedRow, 2);
 
+                    // el importe total
+                    importeTotalTxt.setText("S/ " + manager.recursiveMethod(0));
                     manager.saveEmployees();
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -516,7 +520,41 @@ public class MainFrame extends JFrame {
                 }
             }
         });
-
+        searchBy.addActionListener(e -> {
+            String option = (String) searchBy.getSelectedItem();
+            if (option.equals("ACTIVO")) {
+                employeeModel.setRowCount(0);
+                ArrayList<Empleado> newArr = manager.getEmployeesByStatus(Status.ACTIVO);
+                for (int i = 0; i < newArr.tamaño(); i++) {
+                    Empleado empleado = newArr.buscarPorIndice(i);
+                    if (empleado != null) {
+                        employeeModel.addRow(new Object[]{empleado.getId(), empleado.getName(), empleado.getLastName(),
+                                empleado.getMonthlyRate(), empleado.monthlyAmount(), empleado.salary(), empleado.getDaysWorkedInMonth(),
+                                empleado.getStatus()});
+                    }
+                }
+            } else if (option.equals("VACACIONES")) {
+                employeeModel.setRowCount(0);
+                for (int i = 0; i < manager.getEmployees().tamaño(); i++) {
+                    Empleado empleado = manager.getEmployees().buscarPorIndice(i);
+                    if (empleado != null && empleado.getStatus() == Status.VACACIONES) {
+                        employeeModel.addRow(new Object[]{empleado.getId(), empleado.getName(), empleado.getLastName(),
+                                empleado.getMonthlyRate(), empleado.monthlyAmount(), empleado.salary(), empleado.getDaysWorkedInMonth(),
+                                empleado.getStatus()});
+                    }
+                }
+            } else if (option.equals("DESCANSO MEDICO")) {
+                employeeModel.setRowCount(0);
+                for (int i = 0; i < manager.getEmployees().tamaño(); i++) {
+                    Empleado empleado = manager.getEmployees().buscarPorIndice(i);
+                    if (empleado != null && empleado.getStatus() == Status.DESCANSO_MEDICO) {
+                        employeeModel.addRow(new Object[]{empleado.getId(), empleado.getName(), empleado.getLastName(),
+                                empleado.getMonthlyRate(), empleado.monthlyAmount(), empleado.salary(), empleado.getDaysWorkedInMonth(),
+                                empleado.getStatus()});
+                    }
+                }
+            }
+        });
         queueBtn.addActionListener(e -> handleQueue());
         stackBtn.addActionListener(e -> handleStack());
     }
@@ -553,7 +591,6 @@ public class MainFrame extends JFrame {
         Empleado empleado = manager.getQueue().poll();
         if (empleado != null) {
             updateEmployeeTable(empleado);
-            System.out.println("Empleado eliminado de la cola y actualizado en la tabla");
         } else {
             JOptionPane.showMessageDialog(this, "La cola está vacía", "Información", JOptionPane.INFORMATION_MESSAGE);
         }
@@ -563,7 +600,6 @@ public class MainFrame extends JFrame {
         Empleado empleado = manager.getQueue().pollAsStack();
         if (empleado != null) {
             updateEmployeeTable(empleado);
-            System.out.println("Empleado eliminado de la pila y actualizado en la tabla");
         } else {
             JOptionPane.showMessageDialog(this, "La pila está vacía", "Información", JOptionPane.INFORMATION_MESSAGE);
         }
