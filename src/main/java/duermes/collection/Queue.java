@@ -15,6 +15,17 @@ public class Queue<E> {
         capacity = 4;
         queue = (E[]) new Object[capacity];
     }
+
+    public ArrayList<E> getQueue() {
+        ArrayList<E> list = new ArrayList<>();
+        for (int i = 0; i <= last; i++) {
+            if (queue[i] != null) {
+                list.agregar(queue[i]);
+            }
+        }
+        return list;
+    }
+
     public E offer(E element) {
         // enqueue
         if (last == queue.length-1) {
@@ -48,7 +59,7 @@ public class Queue<E> {
     }
 
     public E pollAsStack() {
-        //dequeue
+        // dequeue from the stack (LIFO)
         if (isEmpty()) {
             return null;
         }
@@ -56,12 +67,12 @@ public class Queue<E> {
         queue[last--] = null;
         if (last < 0) {
             init();
-        } else if (queue.length < queue.length/4 && queue.length > 1) {
+        } else if (last < queue.length / 4 && queue.length > 1) {
             shrink();
         }
         return value;
-
     }
+
 
     public Object peek () {
         // Ver el primer elemento en nuestra cola
@@ -124,10 +135,5 @@ public class Queue<E> {
         capacity = newCapacity;
         queue = newArray;
     }
-
-    public Object[] getQueue() {
-        return queue;
-    }
-
 
 }

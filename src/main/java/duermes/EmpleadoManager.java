@@ -10,9 +10,11 @@ import java.time.format.DateTimeFormatter;
 public class EmpleadoManager {
     private ArrayList<Empleado> employees;
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    Queue<Empleado> queue;
 
     public EmpleadoManager() {
         employees = new ArrayList<>();
+        queue = new Queue<>(getEmployees().tamaño() + 1);
     }
 
     // Método para guardar empleados en un archivo de texto
@@ -129,33 +131,21 @@ public class EmpleadoManager {
         return employees;
     }
 
-    // report of all workers by status (usar un metodo de busqueda)
-    public static Empleado[] reportByStatus(Empleado[] employees, Status status) {
-        Empleado[] report = new Empleado[employees.length];
-        for (Empleado employee : employees) {
-            if (employee.getStatus() == status) {
-                report[0] = employee;
-            }
-        }
-        return report;
-    }
-
-
-    // reporte de trabajadores en total ordenado por nombre, usar metodo de ordenamiento
-    public static Empleado[] employeesReport(Empleado[] employees) {
-        Empleado[] report = new Empleado[employees.length];
-        return report;
-    }
 
     // punto 7 metodo
-    public static Queue<Empleado> employeeQueue(Empleado[] employees) {
-        Queue<Empleado> queue = new Queue<>(employees.length);
-        for (Empleado employee : employees) {
-            queue.offer(employee);
+    public Queue<Empleado> employeeQueue() {
+        for (int i = 0; i < employees.tamaño(); i++) {
+            Empleado empleado = employees.buscarPorIndice(i);
+            if (empleado != null) {
+                queue.offer(empleado);
+            } else {
+                System.out.println("ocurrio un error");
+            }
         }
-        Empleado first = queue.poll();
-        first.getName();
-        first.getMonthlyRate();
+        return queue;
+    }
+
+    public Queue<Empleado> getQueue() {
         return queue;
     }
 

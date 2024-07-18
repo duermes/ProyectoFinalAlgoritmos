@@ -10,6 +10,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
+import duermes.collection.ArrayList;
+import duermes.collection.Queue;
 public class MainFrame extends JFrame {
     EmpleadoManager manager;
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -179,14 +181,15 @@ public class MainFrame extends JFrame {
         employeeTable.getTableHeader().setResizingAllowed(false);
 
         for (int i = 0; i < manager.getEmployees().tamaño(); i++) {
-            Empleado empleado = manager.getEmployees().buscarPorIndice(i);
+            ArrayList<Empleado> queue = manager.employeeQueue().getQueue(); // Esto ahora devuelve un ArrayList<Empleado>
+            Empleado empleado = queue.buscarPorIndice(i);
             if (empleado != null) {
                 employeeModel.addRow(new Object[]{empleado.getId(), empleado.getName(), empleado.getLastName(),
                         empleado.getMonthlyRate(), empleado.monthlyAmount(), empleado.salary(), empleado.getDaysWorkedInMonth(),
                         empleado.getStatus()});
+
             }
         }
-
 
         JScrollPane scrollPane1 = new JScrollPane(employeeTable);
         scrollPane1.setBounds(16, 200, 880, 300);
@@ -228,7 +231,7 @@ public class MainFrame extends JFrame {
         stackBtn.setBorder(null);
 
         // CREATING TABLE OF OUTPUT
-        String[] columnNames = {"NOMBRE", "APELLIDO", "SALARIO"};
+        String[] columnNames = {"ID" ,"NOMBRE", "APELLIDO", "SALARIO"};
         billingModel = new DefaultTableModel(columnNames, 0);
         billingPaymentTable = new JTable(billingModel);
         billingPaymentTable.setRowHeight(30);
@@ -241,7 +244,7 @@ public class MainFrame extends JFrame {
         for (int i = 0; i < manager.getEmployees().tamaño(); i++) {
             Empleado empleado = manager.getEmployees().buscarPorIndice(i);
             if (empleado != null) {
-                billingModel.addRow(new Object[]{empleado.getName(), empleado.getLastName(), empleado.salary()});
+                billingModel.addRow(new Object[]{empleado.getId(),empleado.getName(), empleado.getLastName(), empleado.salary()});
             }
         }
 
@@ -447,6 +450,7 @@ public class MainFrame extends JFrame {
             }
 
 
+
         });
 
         // FOR THE EMPLOYEES LIST
@@ -483,6 +487,7 @@ public class MainFrame extends JFrame {
                     JOptionPane.showMessageDialog(this, "Error al actualizar los datos del empleado", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
+
         });
 
         orderBy.addActionListener(e -> {
@@ -512,6 +517,8 @@ public class MainFrame extends JFrame {
             }
         });
 
+        queueBtn.addActionListener(e -> handleQueue());
+        stackBtn.addActionListener(e -> handleStack());
     }
 
     private void buttonPressed(JButton button) {
@@ -540,6 +547,40 @@ public class MainFrame extends JFrame {
         billingBtn.setVisible(button == employeeBtn);
 
         newEmployeePanel.setVisible(button == newEmployeeBtn);
+    }
+
+    private void handleQueue() {
+        Empleado empleado = manager.getQueue().poll();
+        if (empleado != null) {
+            updateEmployeeTable(empleado);
+            System.out.println("Empleado eliminado de la cola y actualizado en la tabla");
+        } else {
+            JOptionPane.showMessageDialog(this, "La cola está vacía", "Información", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private void handleStack() {
+        Empleado empleado = manager.getQueue().pollAsStack();
+        if (empleado != null) {
+            updateEmployeeTable(empleado);
+            System.out.println("Empleado eliminado de la pila y actualizado en la tabla");
+        } else {
+            JOptionPane.showMessageDialog(this, "La pila está vacía", "Información", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private void updateEmployeeTable(Empleado empleado) {
+        DefaultTableModel model = (DefaultTableModel) billingPaymentTable.getModel();
+        for (int i = 0; i < model.getRowCount(); i++) {
+            int idColumnIndex = 0;
+            if (Integer.parseInt(model.getValueAt(i, idColumnIndex).toString()) == empleado.getId()) {
+                model.removeRow(i);
+                break;
+            } else {
+                System.out.println("Empleado no encontrado en la tabla");
+            }
+        }
+        System.out.println("Tabla actualizada después de eliminar empleado");
     }
 
 }
