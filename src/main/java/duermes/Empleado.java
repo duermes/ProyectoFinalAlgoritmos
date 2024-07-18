@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.time.Month;
 
 public class Empleado {
-    private static int idCounter = 00000;
+    private static int idCounter = 0;
     private int id;
     private String name;
     private String lastName;
@@ -24,20 +24,30 @@ public class Empleado {
         this.status = status;
         this.monthlyRate = monthlyRate;
         this.daysWorkedInMonth = daysWorkedInMonth;
-        setId();
+        setId(++idCounter);
     }
 
     public double monthlyAmount() {
-        return monthlyRate * (double) (daysWorkedInMonth/30);
+        double amount = monthlyRate * ((double) daysWorkedInMonth / 31.0);
+        return Math.round(amount * 100) / 100.0;
     }
 
     public double salary() {
-        return monthlyAmount() - (monthlyAmount() * TAX);
+        double monthlyAmount = monthlyAmount();
+        double salary = monthlyAmount - (monthlyAmount * TAX);
+        return Math.round(salary * 100) / 100.0;
+
     }
 
-    private void setId() {
+    public void setId() {
         this.id = ++idCounter;
     }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+
     public String getName() {
         return name;
     }
@@ -82,4 +92,19 @@ public class Empleado {
         return id;
     }
 
+    public int getDaysWorkedInMonth() {
+        return daysWorkedInMonth;
+    }
+
+    public void setDaysWorkedInMonth(int daysWorkedInMonth) {
+        this.daysWorkedInMonth = daysWorkedInMonth;
+    }
+
+    public static int getIdCounter() {
+        return idCounter;
+    }
+
+    public static void setIdCounter(int idCounter) {
+        Empleado.idCounter = idCounter;
+    }
 }

@@ -1,29 +1,35 @@
 package duermes.gui;
 
-import duermes.Empresa;
-import duermes.Status;
+import duermes.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 public class MainFrame extends JFrame {
-
+    EmpleadoManager manager;
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     JPanel newEmployeePanel, employeePanel, informationPanel, editEmployeePanel, billingPanel;
     JButton closeBtn, newEmployeeBtn, employeeBtn, informationBtn, addBtn1, employeeBtn2, billingBtn, editBtn,
             queueBtn, stackBtn;
     JTextField nameTxt, lastNameTxt, birthDateTxt, monthlyRateTxt, workedDaysTxt;
+
     JTextArea importeTotalTxt;
     Font actorFont;
+
     JComboBox<Status> status1, status2;
     JComboBox<String> orderBy, searchBy;
     JTable billingPaymentTable, employeeTable;
     DefaultTableModel billingModel, employeeModel;
 
 
-    public MainFrame() {
+    public MainFrame(EmpleadoManager manager) {
         super("Control de Planilla ATE");
+        this.manager = manager;
         setSize(1241, 702);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
@@ -172,8 +178,15 @@ public class MainFrame extends JFrame {
         employeeTable.getTableHeader().setReorderingAllowed(false);
         employeeTable.getTableHeader().setResizingAllowed(false);
 
-        employeeModel.addRow(new Object[]{"00001", "Juan", "Perez", 1000, 1000, 850, 30, Status.ACTIVO});
-        employeeModel.addRow(new Object[]{"00002", "Maria", "Gomez", 2000, 2000, 1700, 30, Status.VACACIONES});
+        for (int i = 0; i < manager.getEmployees().tamaño(); i++) {
+            Empleado empleado = manager.getEmployees().buscarPorIndice(i);
+            if (empleado != null) {
+                employeeModel.addRow(new Object[]{empleado.getId(), empleado.getName(), empleado.getLastName(),
+                        empleado.getMonthlyRate(), empleado.monthlyAmount(), empleado.salary(), empleado.getDaysWorkedInMonth(),
+                        empleado.getStatus()});
+            }
+        }
+
 
         JScrollPane scrollPane1 = new JScrollPane(employeeTable);
         scrollPane1.setBounds(16, 200, 880, 300);
@@ -224,10 +237,13 @@ public class MainFrame extends JFrame {
         billingPaymentTable.getTableHeader().setReorderingAllowed(false);
         billingPaymentTable.getTableHeader().setResizingAllowed(false);
 
-        // Agregar datos a la tabla
-        billingModel.addRow(new Object[]{"Juan", "Perez", 1000});
-        billingModel.addRow(new Object[]{"Maria", "Gomez", 2000});
 
+        for (int i = 0; i < manager.getEmployees().tamaño(); i++) {
+            Empleado empleado = manager.getEmployees().buscarPorIndice(i);
+            if (empleado != null) {
+                billingModel.addRow(new Object[]{empleado.getName(), empleado.getLastName(), empleado.salary()});
+            }
+        }
 
         JScrollPane scrollPane = new JScrollPane(billingPaymentTable);
         scrollPane.setBounds(122, 200, 662, 300);
@@ -365,7 +381,10 @@ public class MainFrame extends JFrame {
 
 
     public void actionListeners() {
-        closeBtn.addActionListener(e -> System.exit(0));
+        closeBtn.addActionListener(e -> {
+                System.exit(0);
+        });
+
         newEmployeeBtn.addActionListener(e -> {
             buttonPressed(newEmployeeBtn);
             newEmployeeBtn.setBackground(new Color(221, 140, 88));
@@ -388,13 +407,111 @@ public class MainFrame extends JFrame {
             billingBtn.setBackground(new Color(221, 140, 88));
             employeeBtn2.setBackground(new Color(235, 184, 151));
         });
-
         informationBtn.addActionListener(e -> {
             buttonPressed(informationBtn);
             informationBtn.setBackground(new Color(221, 140, 88));
             newEmployeeBtn.setBackground(new Color(235, 184, 151));
             employeeBtn.setBackground(new Color(235, 184, 151));
         });
+
+        addBtn1.addActionListener(e -> {
+            // obtener la info de los txtfield
+            String name = nameTxt.getText();
+            String lastName = lastNameTxt.getText();
+            try {
+                LocalDate birthDate = LocalDate.parse(birthDateTxt.getText(), formatter);
+                System.out.println("Fecha parseada: " + birthDate);
+                double monthlyRate = Double.parseDouble(monthlyRateTxt.getText());
+                int daysWorked = Integer.parseInt(workedDaysTxt.getText());
+                Status status = (Status) status1.getSelectedItem();
+                Empleado employee = new Empleado(name, lastName, birthDate, status, monthlyRate, daysWorked);
+                manager.addEmployee(employee);
+                System.out.println("Monthly Rate: " + employee.getMonthlyRate());
+                System.out.println("Monthly Amount: " + employee.monthlyAmount());
+                System.out.println("Salary: " + employee.salary());
+                System.out.println("Days Worked: " + employee.getDaysWorkedInMonth());
+                // add to models new employee
+                employeeModel.addRow(new Object[]{employee.getId(), employee.getName(), employee.getLastName(),
+                        employee.getMonthlyRate(), employee.monthlyAmount(), employee.salary(), employee.getDaysWorkedInMonth(),
+                        employee.getStatus()});
+                billingModel.addRow(new Object[]{employee.getName(), employee.getLastName(), employee.salary()});
+                nameTxt.setText("");
+                lastNameTxt.setText("");
+                birthDateTxt.setText("");
+                monthlyRateTxt.setText("");
+                workedDaysTxt.setText("");
+            } catch (DateTimeParseException dtpe) {
+                System.err.println("Formato de fecha inválido: " + dtpe.getMessage());
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+
+
+        });
+
+        // FOR THE EMPLOYEES LIST
+        editBtn.addActionListener(e -> {
+            int selectedRow = employeeTable.getSelectedRow();
+            if (selectedRow != -1) {
+                try {
+                    int id = Integer.parseInt(employeeTable.getValueAt(selectedRow, 0).toString());
+                    String name = employeeTable.getValueAt(selectedRow, 1).toString();
+                    String lastName = employeeTable.getValueAt(selectedRow, 2).toString();
+                    double monthlyRate = Double.parseDouble(employeeTable.getValueAt(selectedRow, 3).toString());
+                    int daysWorked = Integer.parseInt(employeeTable.getValueAt(selectedRow, 6).toString());
+                    Status status = Status.valueOf(employeeTable.getValueAt(selectedRow, 7).toString());
+                    manager.updateEmployee(id, name, lastName, status, monthlyRate, daysWorked);
+                    JOptionPane.showMessageDialog(this, "Empleado actualizado con éxito", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    // Refresh table
+                    // Actualizar la fila en employeeTable
+                    employeeTable.getModel().setValueAt(name, selectedRow, 1);
+                    employeeTable.getModel().setValueAt(lastName, selectedRow, 2);
+                    employeeTable.getModel().setValueAt(monthlyRate, selectedRow, 3);
+                    employeeTable.getModel().setValueAt(manager.getEmployees().buscarPorIndice(selectedRow).monthlyAmount(), selectedRow, 4);
+                    employeeTable.getModel().setValueAt(manager.getEmployees().buscarPorIndice(selectedRow).salary(), selectedRow, 5);
+                    employeeTable.getModel().setValueAt(daysWorked, selectedRow, 6);
+                    employeeTable.getModel().setValueAt(status, selectedRow, 7);
+
+                    // Actualizar la fila en billingPaymentTable
+                    billingPaymentTable.getModel().setValueAt(name, selectedRow, 0);
+                    billingPaymentTable.getModel().setValueAt(lastName, selectedRow, 1);
+                    billingPaymentTable.getModel().setValueAt(manager.getEmployees().buscarPorIndice(selectedRow).salary(), selectedRow, 2);
+
+                    manager.saveEmployees();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Error al actualizar los datos del empleado", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        orderBy.addActionListener(e -> {
+            String option = (String) orderBy.getSelectedItem();
+            if (option.equals("ESTADO")) {
+                EmpleadoUtils.sortByStatus(manager.getEmployees(), 0, manager.getEmployees().tamaño() - 1);
+                employeeModel.setRowCount(0);
+                for (int i = 0; i < manager.getEmployees().tamaño(); i++) {
+                    Empleado empleado = manager.getEmployees().buscarPorIndice(i);
+                    if (empleado != null) {
+                        employeeModel.addRow(new Object[]{empleado.getId(), empleado.getName(), empleado.getLastName(),
+                                empleado.getMonthlyRate(), empleado.monthlyAmount(), empleado.salary(), empleado.getDaysWorkedInMonth(),
+                                empleado.getStatus()});
+                    }
+                }
+            } else if (option.equals("NOMBRE")) {
+                EmpleadoUtils.sortByName(manager.getEmployees(), 0, manager.getEmployees().tamaño() - 1);
+                employeeModel.setRowCount(0);
+                for (int i = 0; i < manager.getEmployees().tamaño(); i++) {
+                    Empleado empleado = manager.getEmployees().buscarPorIndice(i);
+                    if (empleado != null) {
+                        employeeModel.addRow(new Object[]{empleado.getId(), empleado.getName(), empleado.getLastName(),
+                                empleado.getMonthlyRate(), empleado.monthlyAmount(), empleado.salary(), empleado.getDaysWorkedInMonth(),
+                                empleado.getStatus()});
+                    }
+                }
+            }
+        });
+
     }
 
     private void buttonPressed(JButton button) {
