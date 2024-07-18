@@ -13,27 +13,31 @@ public class Empleado {
     private LocalDate birthDate;
     private Status status;
     private static final double TAX = 0.15;
-    private double salary;
-    private Hashtable<Month, Integer> workDaysPerMonth;
+    private double monthlyRate;
+    private int daysWorkedInMonth;
 
-    public Empleado(String name, String lastName, LocalDate birthDate, Status status, double salary) {
+
+    public Empleado(String name, String lastName, LocalDate birthDate, Status status, double monthlyRate, int daysWorkedInMonth) {
         this.name = name;
         this.lastName = lastName;
         this.birthDate = birthDate;
         this.status = status;
-        this.salary = salary;
-        this.workDaysPerMonth = new Hashtable<>(12);
+        this.monthlyRate = monthlyRate;
+        this.daysWorkedInMonth = daysWorkedInMonth;
         setId();
+    }
+
+    public double monthlyAmount() {
+        return monthlyRate * (double) (daysWorkedInMonth/30);
+    }
+
+    public double salary() {
+        return monthlyAmount() - (monthlyAmount() * TAX);
     }
 
     private void setId() {
         this.id = ++idCounter;
     }
-
-    public double getFinalSalary() {
-        return salary - (salary * TAX);
-    }
-
     public String getName() {
         return name;
     }
@@ -66,20 +70,12 @@ public class Empleado {
         this.status = status;
     }
 
-    public double getSalary() {
-        return salary;
+    public double getMonthlyRate() {
+        return monthlyRate;
     }
 
-    public void setSalary(double salary) {
-        this.salary = salary;
-    }
-
-    public int getWorkDays(Month month) {
-        return workDaysPerMonth.get(month);
-    }
-
-    public void setWorkDaysPerMonth(Month mes, int days) {
-        workDaysPerMonth.put(mes, days);
+    public void setMonthlyRate(double monthlyRate) {
+        this.monthlyRate = monthlyRate;
     }
 
     public int getId() {
